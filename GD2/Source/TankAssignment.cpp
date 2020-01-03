@@ -102,23 +102,23 @@ namespace gen
 
 		// Create scenery templates - loads the meshes
 		// Template type, template name, mesh name
-		EntityManager.CreateTemplate("Scenery", "Skybox", "Skybox.x");
-		EntityManager.CreateTemplate("Scenery", "Floor", "Floor.x");
-		EntityManager.CreateTemplate("Scenery", "Building", "Building.x");
-		EntityManager.CreateTemplate("Scenery", "Tree", "Tree1.x");
-
-		// Creates scenery entities
-		// Type (template name), entity name, position, rotation, scale
-		EntityManager.CreateEntity("Skybox", "Skybox", CVector3(0.0f, -10000.0f, 0.0f), CVector3::kZero, CVector3(10, 10, 10));
-		EntityManager.CreateEntity("Floor", "Floor");
-		EntityManager.CreateEntity("Building", "Building", CVector3(0.0f, 0.0f, 40.0f));
-		for (int tree = 0; tree < 100; ++tree)
-		{
-			// Some random trees
-			EntityManager.CreateEntity("Tree", "Tree",
-				CVector3(Random(-200.0f, 30.0f), 0.0f, Random(40.0f, 150.0f)),
-				CVector3(0.0f, Random(0.0f, 2.0f * kfPi), 0.0f));
-		}
+		//EntityManager.CreateTemplate("Scenery", "Skybox", "Skybox.x");
+		//EntityManager.CreateTemplate("Scenery", "Floor", "Floor.x");
+		//EntityManager.CreateTemplate("Scenery", "Building", "Building.x");
+		//EntityManager.CreateTemplate("Scenery", "Tree", "Tree1.x");
+		//
+		//// Creates scenery entities
+		//// Type (template name), entity name, position, rotation, scale
+		//EntityManager.CreateEntity("Skybox", "Skybox", CVector3(0.0f, -10000.0f, 0.0f), CVector3::kZero, CVector3(10, 10, 10));
+		//EntityManager.CreateEntity("Floor", "Floor");
+		//EntityManager.CreateEntity("Building", "Building", CVector3(0.0f, 0.0f, 40.0f));
+		//for (int tree = 0; tree < 100; ++tree)
+		//{
+		//	// Some random trees
+		//	EntityManager.CreateEntity("Tree", "Tree",
+		//		CVector3(Random(-200.0f, 30.0f), 0.0f, Random(40.0f, 150.0f)),
+		//		CVector3(0.0f, Random(0.0f, 2.0f * kfPi), 0.0f));
+		//}
 
 
 		/////////////////////////////////

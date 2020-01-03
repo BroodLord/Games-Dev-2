@@ -107,29 +107,32 @@ namespace gen
 	// Called when the parser meets the start of an element (opening tag) in the templates section
 	void CParseLevel::TemplatesStartElt(const string& eltName, SAttribute* attrs)
 	{
-		// Started reading a new entity template - get type, name and mesh
-		if (m_TemplateType == "Tank")
+		if (eltName == "EntityTemplate")
 		{
-			// Get additional attributes held in ship template tags
-			m_TemplateType = GetAttribute(attrs, "Type");
-			m_TemplateName = GetAttribute(attrs, "Name");
-			m_TemplateMesh = GetAttribute(attrs, "Mesh");
-			m_TemplateHP = GetAttributeInt(attrs, "HP");
-			m_TemplateMaxSpeed = GetAttributeFloat(attrs, "MaxSpeed");
-			m_TemplateAcceleration = GetAttributeFloat(attrs, "Acceleration");
-			m_TemplateTurnSpeed = GetAttributeFloat(attrs, "TurnSpeed");
-			m_TemplateTurretTurnSpeed = GetAttributeFloat(attrs, "ShellDamage");
-			m_TemplateShellDamage = GetAttributeFloat(attrs, "ShellDamage");
-			m_EntityManager->CreateTankTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh, m_TemplateMaxSpeed, m_TemplateAcceleration,
-				m_TemplateTurnSpeed, m_TemplateTurretTurnSpeed, m_TemplateHP, m_TemplateShellDamage);
-		}
-		else
-		{
-			// Get attributes held in the tag
-			m_TemplateType = GetAttribute(attrs, "Type");
-			m_TemplateName = GetAttribute(attrs, "Name");
-			m_TemplateMesh = GetAttribute(attrs, "Mesh");
-			m_EntityManager->CreateTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh);
+			// Started reading a new entity template - get type, name and mesh
+			if (m_TemplateType == "Tank")
+			{
+				// Get additional attributes held in ship template tags
+				m_TemplateType = GetAttribute(attrs, "Type");
+				m_TemplateName = GetAttribute(attrs, "Name");
+				m_TemplateMesh = GetAttribute(attrs, "Mesh");
+				m_TemplateHP = GetAttributeInt(attrs, "HP");
+				m_TemplateMaxSpeed = GetAttributeFloat(attrs, "MaxSpeed");
+				m_TemplateAcceleration = GetAttributeFloat(attrs, "Acceleration");
+				m_TemplateTurnSpeed = GetAttributeFloat(attrs, "TurnSpeed");
+				m_TemplateTurretTurnSpeed = GetAttributeFloat(attrs, "ShellDamage");
+				m_TemplateShellDamage = GetAttributeFloat(attrs, "ShellDamage");
+				m_EntityManager->CreateTankTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh, m_TemplateMaxSpeed, m_TemplateAcceleration,
+					m_TemplateTurnSpeed, m_TemplateTurretTurnSpeed, m_TemplateHP, m_TemplateShellDamage);
+			}
+			else
+			{
+				// Get attributes held in the tag
+				m_TemplateType = GetAttribute(attrs, "Type");
+				m_TemplateName = GetAttribute(attrs, "Name");
+				m_TemplateMesh = GetAttribute(attrs, "Mesh");
+				m_EntityManager->CreateTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh);
+			}
 		}
 	}
 
