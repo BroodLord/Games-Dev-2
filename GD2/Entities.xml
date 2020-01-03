@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- Level Setup -->
+<Level>
+
+  <!-- Entity Templates -->
+  <Templates>
+
+    <!-- Environment Types -->
+    <EntityTemplate Type="Scenery" Name="Skybox" Mesh="Skybox.x"/>
+    <EntityTemplate Type="Scenery" Name="Floor" Mesh="Floor.x"/>
+    <EntityTemplate Type="Scenery" Name="Building" Mesh="Building.x"/>
+    <EntityTemplate Type="Scenery" Name="Tree" Mesh="Tree1.x"/>
+
+    <EntityTemplate Type="Tank" Name="Rogue Scout" Mesh="HoverTank02.x"/>
+    <EntityTemplate Type="Tank" Name="Oberon MkII" Mesh="HoverTank07.x"/>
+
+  </Templates>
+  <!-- End of Entity Types -->
+
+
+  <!-- Scene Setup -->
+  <Entities>
+
+    <!-- Environment Positions -->
+    <Entity Type="Scenery" Name="Skybox">
+      <Position X="0.0" Y="-10000.0" Z="0.0"/>
+    </Entity>
+    <Entity Type="Scenery" Name="Floor">
+      <Position X="0.0" Y="0.0" Z="0.0"/>
+      <Scale X="0.0" Y="0.0" Z="0.0"/>
+    </Entity>
+    <Entity Type="Scenery" Name="Bulding">
+      <Position X="0.0" Y="0.0" Z="40.0"/>
+    </Entity>
+    <Entity Type="Scenery" Name="Tree">
+      <Position X="0.0" Y="0.5" Z="0.0"/>
+    </Entity>
+
+    <!-- Object Positions -->
+    <Entity Type="Tank" Name="Rogue Scout">
+      <Position X="-30.0" Y="0.5" Z="-20.0"/>
+    </Entity>
+    <Entity Type="Tank" Name="Oberon MKII">
+      <Position X="30.0" Y="0.5" Z="20.0"/>
+      <Rotation X="0.0" Y="180.0" Z="0.0"/>
+    </Entity>
+
+  </Entities>
+  <!-- End of Scene Setup -->
+
+</Level>
