@@ -24,6 +24,9 @@ namespace gen
 		Msg_Go,   // Start moving
 		Msg_Start,
 		Msg_Hit,
+		Msg_Ammo,
+		Msg_Health,
+		Msg_Help,
 		Msg_Stop, // Stop all action
 	};
 
@@ -50,6 +53,7 @@ namespace gen
 		//*** Message data
 		EMessageType type;
 		TEntityUID   from;
+		int damage;
 	};
 
 

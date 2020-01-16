@@ -47,7 +47,6 @@ namespace gen
 			const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
 			const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
 		);
-
 		// No destructor needed
 
 
@@ -63,14 +62,12 @@ namespace gen
 		// Keep as a virtual function in case of further derivation
 		virtual bool Update(TFloat32 updateTime);
 
-
 		/////////////////////////////////////
 		//	Private interface
 	private:
 
 		/////////////////////////////////////
 		// Data
-
 		// Add your shell data here
 	};
 

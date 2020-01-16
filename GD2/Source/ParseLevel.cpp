@@ -41,6 +41,7 @@ namespace gen
 		m_EntityType = "";
 		m_EntityName = "";
 		m_Pos = CVector3::kOrigin;
+		m_PatrolPoints;
 		m_Rot = CVector3::kOrigin;
 		m_Scale = CVector3(1.0f, 1.0f, 1.0f);
 	}
@@ -109,6 +110,7 @@ namespace gen
 	{
 		if (eltName == "EntityTemplate")
 		{
+			m_TemplateType = GetAttribute(attrs, "Type");
 			// Started reading a new entity template - get type, name and mesh
 			if (m_TemplateType == "Tank")
 			{
@@ -116,14 +118,28 @@ namespace gen
 				m_TemplateType = GetAttribute(attrs, "Type");
 				m_TemplateName = GetAttribute(attrs, "Name");
 				m_TemplateMesh = GetAttribute(attrs, "Mesh");
-				m_TemplateHP = GetAttributeInt(attrs, "HP");
+				m_TemplateHP = GetAttributeInt(attrs, "MaxHP");
 				m_TemplateMaxSpeed = GetAttributeFloat(attrs, "MaxSpeed");
 				m_TemplateAcceleration = GetAttributeFloat(attrs, "Acceleration");
 				m_TemplateTurnSpeed = GetAttributeFloat(attrs, "TurnSpeed");
-				m_TemplateTurretTurnSpeed = GetAttributeFloat(attrs, "ShellDamage");
+				m_TemplateTurretTurnSpeed = GetAttributeFloat(attrs, "TurretTurnSpeed");
 				m_TemplateShellDamage = GetAttributeFloat(attrs, "ShellDamage");
 				m_EntityManager->CreateTankTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh, m_TemplateMaxSpeed, m_TemplateAcceleration,
 					m_TemplateTurnSpeed, m_TemplateTurretTurnSpeed, m_TemplateHP, m_TemplateShellDamage);
+			}
+			else if (m_TemplateType == "AmmoCreate")
+			{
+				m_TemplateType = GetAttribute(attrs, "Type");
+				m_TemplateName = GetAttribute(attrs, "Name");
+				m_TemplateMesh = GetAttribute(attrs, "Mesh");
+				m_EntityManager->CreateTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh);
+			}
+			else if (m_TemplateType == "HealthCreate")
+			{
+				m_TemplateType = GetAttribute(attrs, "Type");
+				m_TemplateName = GetAttribute(attrs, "Name");
+				m_TemplateMesh = GetAttribute(attrs, "Mesh");
+				m_EntityManager->CreateTemplate(m_TemplateType, m_TemplateName, m_TemplateMesh);
 			}
 			else
 			{
@@ -146,13 +162,6 @@ namespace gen
 	// Called when the parser meets the start of an element (opening tag) in the entities section
 	void CParseLevel::EntitiesStartElt(const string& eltName, SAttribute* attrs)
 	{
-		if (eltName == "TankEntity")
-		{
-			m_EntityType = GetAttribute(attrs, "Type");
-			m_EntityTeam = GetAttributeInt(attrs, "Team");
-			m_EntityName = GetAttribute(attrs, "Name");
-			TEntityUID entityUID = m_EntityManager->CreateTank(m_EntityType, m_EntityTeam, m_EntityName);
-		}
 		// Started reading a new entity - get type and name
 		if (eltName == "Entity")
 		{
@@ -168,13 +177,59 @@ namespace gen
 			m_Rot = CVector3::kOrigin;
 			m_Scale = CVector3(1.0f, 1.0f, 1.0f);
 		}
+		else if (eltName == "TankEntity")
+		{
+			m_EntityType = GetAttribute(attrs, "Type");
+			m_EntityName = GetAttribute(attrs, "Name");
+			m_EntityTeam = GetAttributeInt(attrs, "Team");
+			TEntityUID entityUID = m_EntityManager->CreateTank(m_EntityType, m_EntityTeam, m_EntityName, m_PatrolPoints ,m_Pos, m_Rot);
+			m_PatrolPoints.clear();
+			m_Entity = m_EntityManager->GetEntity(entityUID);
 
+			m_Pos = CVector3::kOrigin;
+			m_Rot = CVector3::kOrigin;
+			m_Scale = CVector3(1.0f, 1.0f, 1.0f);
+
+		}
+		else if (eltName == "Loop")
+		{
+			m_TemplateType = GetAttribute(attrs, "Type");
+			m_TemplateName = GetAttribute(attrs, "Name");
+			int m_TemplateAmount = GetAttributeInt(attrs, "Amount");
+			float m_TemplateX = GetAttributeFloat(attrs, "X");
+			float m_TemplateY = GetAttributeFloat(attrs, "Y");
+			float m_TemplateZ = GetAttributeFloat(attrs, "Z");
+			float m_TemplateMaxX = GetAttributeFloat(attrs, "MaxX");
+			float m_TemplateMaxY = GetAttributeFloat(attrs, "MaxY");
+			float m_TemplateMaxZ = GetAttributeFloat(attrs, "MaxZ");
+
+			for (int i = 0; i < m_TemplateAmount; i++)
+			{
+				float m_XPos, m_YPos, m_ZPos;
+				TEntityUID entityUID = m_EntityManager->CreateEntity(m_TemplateType, m_TemplateName);
+				m_Entity = m_EntityManager->GetEntity(entityUID);
+
+				m_Pos.x = Random(m_TemplateX, m_TemplateMaxX);
+				//m_YPos = Random(m_TemplateY, m_TemplateMaxY);
+				m_Pos.z = Random(m_TemplateZ, m_TemplateMaxZ);
+				m_Entity->Matrix().MakeAffineEuler(m_Pos, m_Rot, kZXY, m_Scale);
+
+			}
+		}
 		// Started reading an entity position - get X,Y,Z
 		else if (eltName == "Position")
 		{
 			m_Pos.x = GetAttributeFloat(attrs, "X");
 			m_Pos.y = GetAttributeFloat(attrs, "Y");
 			m_Pos.z = GetAttributeFloat(attrs, "Z");
+		}
+		else if (eltName == "PatrolPoint")
+		{
+			CVector3 CurrentPatrolPoint;
+			CurrentPatrolPoint.x = GetAttributeFloat(attrs, "X");
+			CurrentPatrolPoint.y = GetAttributeFloat(attrs, "Y");
+			CurrentPatrolPoint.z = GetAttributeFloat(attrs, "Z");
+			m_PatrolPoints.push_back(CurrentPatrolPoint);
 		}
 
 		// Started reading an entity rotation - get X,Y,Z
@@ -227,6 +282,11 @@ namespace gen
 		{
 			m_Entity->Matrix().MakeAffineEuler(m_Pos, m_Rot, kZXY, m_Scale);
 		}
+		if(eltName == "TankEntity")
+		{
+		m_Entity->Matrix().MakeAffineEuler(m_Pos, m_Rot, kZXY, m_Scale);
+		}
+
 	}
 
 	//****************************************************************************/

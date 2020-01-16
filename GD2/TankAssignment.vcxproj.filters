@@ -103,6 +103,12 @@
     </ClCompile>
     <ClCompile Include="Source\ParseLevel.cpp" />
     <ClCompile Include="Source\ParseXML.cpp" />
+    <ClCompile Include="Source\Scene\AmmoEntity.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\HealthCreate.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Scene\Camera.h">
@@ -201,6 +207,12 @@
     </ClInclude>
     <ClInclude Include="Source\ParseLevel.h" />
     <ClInclude Include="Source\ParseXML.h" />
+    <ClInclude Include="Source\Scene\AmmoEntity.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\HealthCreate.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Render\TankAssignment.fx">

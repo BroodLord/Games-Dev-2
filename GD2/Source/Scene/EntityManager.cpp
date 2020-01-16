@@ -138,9 +138,10 @@ TEntityUID CEntityManager::CreateEntity
 // position. Returns the UID of the new entity
 TEntityUID CEntityManager::CreateTank
 (
-	const string&   templateName,
+	const string& templateName,
 	TUInt32         team,
-	const string&   name /*= ""*/,
+	const string& name /*= ""*/,
+	vector<CVector3> patrolPoints,
 	const CVector3& position /*= CVector3::kOrigin*/,
 	const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
 	const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
@@ -151,7 +152,7 @@ TEntityUID CEntityManager::CreateTank
 	CTankTemplate* tankTemplate = static_cast<CTankTemplate*>(GetTemplate(templateName));
 
 	// Create new tank entity with next UID
-	CEntity* newEntity = new CTankEntity(tankTemplate, m_NextUID, team, name, position, rotation, scale);
+	CEntity* newEntity = new CTankEntity(tankTemplate, m_NextUID, team, name, patrolPoints ,position, rotation, scale);
 
 	// Get vector index for new entity and add it to vector
 	TUInt32 entityIndex = static_cast<int>(m_Entities.size());
@@ -183,6 +184,64 @@ TEntityUID CEntityManager::CreateShell
 
 	// Create new tank entity with next UID
 	CEntity* newEntity = new CShellEntity(entityTemplate, m_NextUID,
+		name, position, rotation, scale);
+
+	// Get vector index for new entity and add it to vector
+	TUInt32 entityIndex = static_cast<int>(m_Entities.size());
+	m_Entities.push_back(newEntity);
+
+	// Add mapping from UID to entity index into hash map
+	m_EntityUIDMap->SetKeyValue(m_NextUID, entityIndex);
+
+	m_IsEnumerating = false; // Cancel any entity enumeration (entity list has changed)
+
+							 // Return UID of new entity then increase it ready for next entity
+	return m_NextUID++;
+}
+
+TEntityUID CEntityManager::CreateAmmoCreate
+(
+	const string& templateName,
+	const string& name /*= ""*/,
+	const CVector3& position /*= CVector3::kOrigin*/,
+	const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
+	const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
+)
+{
+	// Get template associated with the template name
+	CEntityTemplate* entityTemplate = GetTemplate(templateName);
+
+	// Create new tank entity with next UID
+	CEntity* newEntity = new AmmoEntity(entityTemplate, m_NextUID,
+		name, position, rotation, scale);
+
+	// Get vector index for new entity and add it to vector
+	TUInt32 entityIndex = static_cast<int>(m_Entities.size());
+	m_Entities.push_back(newEntity);
+
+	// Add mapping from UID to entity index into hash map
+	m_EntityUIDMap->SetKeyValue(m_NextUID, entityIndex);
+
+	m_IsEnumerating = false; // Cancel any entity enumeration (entity list has changed)
+
+							 // Return UID of new entity then increase it ready for next entity
+	return m_NextUID++;
+}
+
+TEntityUID CEntityManager::CreateHealthCreate
+(
+	const string& templateName,
+	const string& name /*= ""*/,
+	const CVector3& position /*= CVector3::kOrigin*/,
+	const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
+	const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
+)
+{
+	// Get template associated with the template name
+	CEntityTemplate* entityTemplate = GetTemplate(templateName);
+
+	// Create new tank entity with next UID
+	CEntity* newEntity = new HealthCreate(entityTemplate, m_NextUID,
 		name, position, rotation, scale);
 
 	// Get vector index for new entity and add it to vector

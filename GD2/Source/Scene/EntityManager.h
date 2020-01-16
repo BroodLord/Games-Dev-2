@@ -13,7 +13,9 @@ using namespace std;
 #include "Defines.h"
 #include "CHashTable.h"
 #include "Entity.h"
+#include "HealthCreate.h"
 #include "TankEntity.h"
+#include "AmmoEntity.h"
 #include "ShellEntity.h"
 #include "Camera.h"
 
@@ -56,7 +58,7 @@ public:
 	CTankTemplate* CEntityManager::CreateTankTemplate( const string& type, const string& name,
 	                                                   const string& mesh, float maxSpeed,
 	                                                   float acceleration, float turnSpeed,
-	                                                   float turretTurnSpeed, int maxHP, int shellDamage );
+	                                                   float turretTurnSpeed, int maxHP, int shellDamage);
 
 
 	// Destroy the given template (name) - returns true if the template existed and was destroyed
@@ -84,9 +86,10 @@ public:
 	// position. Returns the UID of the new entity
 	TEntityUID CreateTank
 	(
-		const string&   templateName,
+		const string& templateName,
 		TUInt32         team,
-		const string&   name = "",
+		const string& name,
+		vector<CVector3> patrolPoints,
 		const CVector3& position = CVector3::kOrigin,
 		const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
 		const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
@@ -101,6 +104,24 @@ public:
 		const CVector3& position = CVector3::kOrigin,
 		const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
 		const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
+	);
+
+	TEntityUID CreateHealthCreate
+	(
+		const string& templateName,
+		const string& name /*= ""*/,
+		const CVector3& position /*= CVector3::kOrigin*/,
+		const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
+		const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
+	);
+
+	TEntityUID CEntityManager::CreateAmmoCreate
+	(
+		const string& templateName,
+		const string& name /*= ""*/,
+		const CVector3& position /*= CVector3::kOrigin*/,
+		const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
+		const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
 	);
 
 

@@ -46,11 +46,73 @@ namespace gen
 	// Will be needed to implement the required tank behaviour in the Update function below
 	extern TEntityUID GetTankUID(int team);
 
+	/*Will determind wether the tank has line of sight*/
+	bool LineOfSight(CVector3 TurretFacing, CMatrix4x4 TurretMatrix, CEntity* TankTarget)
+	{
+		
+
+		EntityManager.BeginEnumEntities("", "", "Scenery");
+		CEntity* Building = EntityManager.EnumEntity();
+		while (Building != 0)
+		{
+			if (Building->GetName() == "Building")
+			{
+				/* Gets all the corners of the building*/
+				CVector3 BuildingPoints[4];
+				CVector3 buildingpointTR = Building->Position();
+				buildingpointTR.x = Building->Position().x + 8.0f;
+				buildingpointTR.z = Building->Position().z + 8.0f;
+				BuildingPoints[0] = buildingpointTR;
+		
+				CVector3 buildingpointBR = Building->Position();
+				buildingpointBR.x = Building->Position().x + 8.0f;
+				buildingpointBR.z = Building->Position().z - 8.0f;
+				BuildingPoints[1] = buildingpointBR;
+		
+				CVector3 buildingpointTL = Building->Position();
+				buildingpointTL.x = Building->Position().x - 8.0f;
+				buildingpointTL.z = Building->Position().z + 8.0f;
+				BuildingPoints[2] = buildingpointTL;
+		
+				CVector3 buildingpointBL = Building->Position();
+				buildingpointBL.x = Building->Position().x - 8.0f;
+				buildingpointBL.z = Building->Position().z - 8.0f;
+				BuildingPoints[3] = buildingpointBL;
+		
+				/* Will run through all the building points */
+				for (int i = 0; i < 4; i++)
+				{
+					/* Gets the vector between tanks */
+					CVector3 TankToTank = TankTarget->Position() - TurretMatrix.Position();
+					/* Normalises the vector */
+					CVector3 NormTankToTank = Normalise(TankToTank);
+					CVector3 DistVector = BuildingPoints[i] - TurretMatrix.Position();
+					/* Gets the length of the distance vector */
+					float Dist = sqrt(LengthSquared(DistVector));
+					/*Works out how far away we are*/
+					CVector3 DistanceAway = TurretMatrix.Position() + Dist * NormTankToTank;
+					/* Point to box to determine line of sight */
+					if (DistanceAway.x > Building->Position().x - 8 && DistanceAway.x < Building->Position().x + 8)
+					{
+						if(DistanceAway.z > Building->Position().z - 6 && DistanceAway.z < Building->Position().z + 6)
+						{
+						return true;
+						}
+					}
+				}
+			}
+			Building = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+		return false;
+	}
+
+	/*Sphere to sphere collision*/
 	bool SphereToSphere(CVector3 A, CVector3 B)
 	{
-		if (A.x > B.x - 20 && A.x < B.x + 20 &&
-			A.y > B.y - 20 && A.y < B.y + 20 &&
-			A.z > B.z - 20 && A.z < B.z + 20)
+		if (A.x > B.x - 5 && A.x < B.x + 5 &&
+			A.y > B.y - 5 && A.y < B.y + 5 &&
+			A.z > B.z - 5 && A.z < B.z + 5)
 		{
 			return true;
 		}
@@ -59,10 +121,32 @@ namespace gen
 			return false;
 		}
 	}
-	void CTankEntity::UpdateTankData(int Index)
+	/*This will update all the tank targets so the list is never outdated*/
+	void CTankEntity::UpdateTankTargets()
 	{
-		m_Target = GetTankUID(Index);
-		TankTarget = EntityManager.GetEntity(m_Target);
+		m_Target.clear();
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		CEntity* entity = EntityManager.EnumEntity();
+		int counter = 0;
+		/* Will get all the enemies of the current team and will put them into the target list */
+		while (entity != 0)
+		{
+			CTankEntity* TargetTank = static_cast<CTankEntity*>(entity);
+			if (TargetTank != this && TargetTank != NULL && TargetTank->m_Team != this->m_Team)
+			{
+
+				m_Target.push_back(TargetTank->GetUID());
+				++counter;
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+	}
+
+	/* This will update all the tank data that the tanks need */
+	void CTankEntity::UpdateTankData(int index)
+	{
+		TankTarget = EntityManager.GetEntity(index);
 		TargetTank = static_cast<CTankEntity*>(TankTarget);
 		if (TargetTank != NULL)
 		{
@@ -72,20 +156,36 @@ namespace gen
 			DistanceVector.Normalise();
 		}
 	}
+
+	/*Used to find the angles between tanks*/
 	float AngleMath(CMatrix4x4 TurretWorldMatrix, CVector3 TankFacingVector, CVector3 DistanceVector)
 	{
+		/*Gets the magnitudes of both vectors */
 		float MagnitudeA = (TankFacingVector.x * TankFacingVector.x) + (TankFacingVector.y * TankFacingVector.y) + (TankFacingVector.z * TankFacingVector.z);
 		float MagnitudeB = (DistanceVector.x * DistanceVector.x) + (DistanceVector.y * DistanceVector.y) + (DistanceVector.z * DistanceVector.z);
-		float DotProduct = Dot(TankFacingVector, DistanceVector);
-		float Theta = DotProduct / sqrt(MagnitudeA) * sqrt(MagnitudeB);
-		float Angle = ACos(Theta) * 180.0f / 3.14159265359f;
+		/* Gets the dot product of the two vectors */
+		float DotProduct = Dot(DistanceVector, TankFacingVector);
+		/* Combine the two magnitudes */
+		float Magnitude = sqrt(MagnitudeA) * sqrt(MagnitudeB);
+		/* Get theta by diving the product by magnitude */
+		float Theta = DotProduct / Magnitude;
+		/* This will cap the theta so the acos doesn't break */
+		if (Theta > 1)
+		{
+			Theta = 1.0f;
+		}
+		float ACOS = ACos(Theta);
+		/* This will get the angle by transforming the Acos in randians */
+		float Angle = ACOS * 180.0f / 3.14;
 		return Angle;
 	}
+	/* This is used to check the random poses and to make sure the tanks aren't already on the randompos */
 	CVector3 RandomPosChecker(CVector3 MatrixPos, CVector3 RanPos)
 	{
-		if (SphereToSphere(MatrixPos, RanPos))
+		if (MatrixPos.x > RanPos.x - 5 && MatrixPos.x < RanPos.x + 5 &&
+			MatrixPos.z > RanPos.z - 5 && MatrixPos.z < RanPos.z + 5)
 		{
-			RanPos = CVector3(Random(MatrixPos.x - 40, MatrixPos.x + 40), 0.5, Random(MatrixPos.x - 40, MatrixPos.x + 40));
+			RanPos = CVector3(Random(MatrixPos.x - 20, MatrixPos.x + 20), 0.5, Random(MatrixPos.z - 20, MatrixPos.z + 20));
 			RandomPosChecker(MatrixPos, RanPos);
 		}
 		else
@@ -108,6 +208,7 @@ namespace gen
 		TEntityUID      UID,
 		TUInt32         team,
 		const string& name /*=""*/,
+		vector<CVector3> patrolPoints,
 		const CVector3& position /*= CVector3::kOrigin*/,
 		const CVector3& rotation /*= CVector3( 0.0f, 0.0f, 0.0f )*/,
 		const CVector3& scale /*= CVector3( 1.0f, 1.0f, 1.0f )*/
@@ -117,7 +218,7 @@ namespace gen
 
 		// Tanks are on teams so they know who the enemy is
 		m_Team = team;
-
+		PatrolList = patrolPoints;
 		// Initialise other tank data and state
 		m_Speed = 0.0f;
 		m_HP = m_TankTemplate->GetMaxHP();
@@ -139,10 +240,40 @@ namespace gen
 			switch (msg.type)
 			{
 			case Msg_Start:
+				UpdateTankTargets();
+				targetPos = PatrolList.at(PatrolPointer);
 				m_State = Patrol;
 				break;
 			case Msg_Hit:
-				this->m_HP -= 20;
+				this->m_HP -= msg.damage;
+				break;
+			case Msg_Ammo:
+				if (ShootsFired >= 5 && m_State != Dead)
+				{
+					m_State = Ammo;
+				}
+				break;
+			case Msg_Health:
+				if (m_HP <= 50 && m_State != Dead)
+				{
+					m_State = Health;
+				}
+				break;
+			case Msg_Help:
+				UpdateTankTargets();
+				for (int i = 0; i < m_Target.size(); i++)
+				{
+					if (msg.from == m_Target.at(i))
+					{
+						CEntity* Entity = EntityManager.GetEntity(msg.from);
+						CTankEntity* TankEntity = static_cast<CTankEntity*>(Entity);
+						if (TankEntity->m_State != Dead)
+						{
+							SavedEnemyIndex = i;
+						}
+					}
+				}
+				m_State = Aim;
 				break;
 			case Msg_Stop:
 				m_State = Inactive;
@@ -150,240 +281,474 @@ namespace gen
 			}
 		}
 
-		// Tank behaviour
-		// Only move if in Go state
-		//if (m_State == Go)
-		//{
-		//	// Cycle speed up and down using a sine wave - just demonstration behaviour
-		//	//**** Variations on this sine wave code does not count as patrolling - for the
-		//	//**** assignment the tank must move naturally between two specific points
-		//	m_Speed = 10.0f * Sin( m_Timer * 4.0f );
-		//	m_Timer += updateTime;
-		//}
-		//else
-		//{
-		//	m_Speed = 0;
-		//}
+		/* Tanks start in this state */
 		if (m_State == Inactive)
 		{
-
+			
 		}
+		/* This state is triggered when the the tanks have fired or can't shoot there target */
 		if (m_State == Evade)
 		{
+			/*Check the random pos*/
 			RandomPos = RandomPosChecker(Matrix().Position(), RandomPos);
-			Fired = false;
-			m_Speed = 10.0f;
+			/* This will get the rotation of the turret */
 			CVector3 Rotation;
 			Matrix(2).DecomposeAffineEuler(NULL, &Rotation, NULL);
+			/* Make the turns rotate to the front of the turret */
 			if (Rotation.y < 0)
 			{
-				Matrix(2).RotateLocalY(1 * updateTime);
+				Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * updateTime);
 			}
 			if (Rotation.y > 0)
 			{
-				Matrix(2).RotateLocalY(-1 * updateTime);
+				Matrix(2).RotateLocalY(-m_TankTemplate->GetTurretTurnSpeed() * updateTime);
 			}
-			CMatrix4x4 BodyMatrix = Matrix(1) * Matrix(0);
+			/*Gets the body matrix*/
+			CMatrix4x4 BodyMatrix = Matrix(0) * Matrix(1);
 			CVector3 Facing = -BodyMatrix.ZAxis();
 			targetPos = this->RandomPos;
 			CVector3 DistanceVect = Matrix().Position() - targetPos;
 			DistanceVect.Normalise();
+			/* Makes the speed faster if not already at the max*/
+			if (m_Speed < m_TankTemplate->GetMaxSpeed())
+			{
+				m_Speed += m_TankTemplate->GetAcceleration();
+			}
+			/*Finds the angle*/
 			float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
-			if (Angle < 0.5f)
+			/*Gets the dot product to determine weather it left or right*/
+			float DotProduct = Dot(DistanceVect, BodyMatrix.XAxis());
+			/* if the angle is dead ahead then more at normal speed*/
+			if (Angle < 3.0f)
 			{
 				Matrix().FaceTarget(RandomPos);
 				Matrix().MoveLocalZ(m_Speed * updateTime);
 			}
 			else
 			{
-				Matrix().MoveLocalZ(m_Speed / 2 * updateTime);
-				Matrix().RotateLocalY(1.0f * updateTime);
+				/* If the angle is not dead ahead this will determine which way the tank needs to turn */
+				if (DotProduct > 0.0f)
+				{
+					Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+					Matrix().RotateLocalY((-m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+				}
+				if (DotProduct < -0.0f)
+				{
+					Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+					Matrix().RotateLocalY((m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+				}
 			}
+			/* Check to see if the tank is already at the random pos */
 			if (SphereToSphere(Matrix().GetPosition(), this->RandomPos))
 			{
 				m_State = Patrol;
-				this->RandomPos = CVector3(Random(-40, 40), 0.5, Random(-40, 40));
+				Fired = false;
+				this->RandomPos = CVector3(Random(Matrix().Position().x - 20, Matrix().Position().x + 20), 0.5, Random(Matrix().Position().z - 20, Matrix().Position().z + 20));
+			}
+			/* If the tank is hit it will send this message out to all the other tanks on its team */
+			if (msg.type == Msg_Hit)
+			{
+				EntityManager.BeginEnumEntities("", "", "Tank");
+				CEntity* entity = EntityManager.EnumEntity();
+				while (entity != 0)
+				{
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == this->GetTeam())
+					{
+						/* Will only send to tanks that are not in there states */
+						if (TankEntity != this && TankEntity->GetShootsFired() != 10 && TankEntity->m_State != TankEntity->Dead &&
+							TankEntity->m_State != TankEntity->Aim && TankEntity->m_State != TankEntity->Ammo && TankEntity->m_State != TankEntity->Health
+							)
+						{
+							TEntityUID UID = TankEntity->GetUID();
+							msg.type = Msg_Help;
+							//msg.from = SystemUID;
+							Messenger.SendMessage(UID, msg);
+						}
+					}
+					entity = EntityManager.EnumEntity();
+				}
+				EntityManager.EndEnumEntities();
 			}
 
 		}
+		/* This state is used by the tanks to get a more accureate shot on the enemy tank */
 		if (m_State == Aim)
 		{
-			for (int i = 0; i < 2; i++)
+			/*Checks to see if the tanks ammo isn't empty*/
+			if (this->ShootsFired != 10)
 			{
-				if (Fired == false)
+				/* Check to see if the saved index isn't null */
+				if (SavedEnemyIndex < m_Target.size())
 				{
-					m_Target = GetTankUID(i);
-					if (m_Target != this->GetUID())
+					/* Check to see if a shot has been fired */
+					if (Fired == false)
 					{
-						UpdateTankData(i);
-						if (TargetTank != NULL)
+						CEntity* Tank = EntityManager.GetEntity(m_Target.at(SavedEnemyIndex));
+						CTankEntity* TankEntity = static_cast<CTankEntity*>(Tank);
+						/*Check to see if the target is dead*/
+						if (m_Target[SavedEnemyIndex] != NULL && TankEntity->m_State != TankEntity->Dead)
 						{
-							Angle = AngleMath(this->TurretWorldMatrix, this->TankFacingVector, this->DistanceVector);
-							float DotProduct = Dot(DistanceVector, this->TankFacingVector);
-							if (this->Timer >= 0.0f)
+							UpdateTankData(m_Target[SavedEnemyIndex]);
+						}
+						/*Check to see if they have line of sight*/
+						if (!LineOfSight(this->TankFacingVector, this->TurretWorldMatrix, TankTarget))
+						{
+							if (m_Target[SavedEnemyIndex] != NULL && TankEntity->m_State != TankEntity->Dead)
 							{
-								Timer -= updateTime;
-								if (Angle > 0.5f)
+								/*Gets the angle*/
+								Angle = AngleMath(this->TurretWorldMatrix, this->TankFacingVector, this->DistanceVector);
+								float DotProduct = Dot(DistanceVector, this->TurretWorldMatrix.XAxis());
+								if (this->Timer >= 0.0f)
 								{
-									Matrix(2).RotateLocalY(2 * updateTime);
+									Timer -= updateTime;
+									/*If the angle is in the correct rotation*/
+									if (Angle < 2.0f)
+									{
+										TurretWorldMatrix.FaceTarget(TankTarget->Position());
+									}
+									/* Else it will turn the fasters way to reach the target */
+									else if (DotProduct > 0.0f)
+									{
+										Matrix(2).RotateLocalY((m_TankTemplate->GetTurretTurnSpeed() * 2) * updateTime);
+									}
+									else if (DotProduct < -0.0f)
+									{
+										Matrix(2).RotateLocalY((-m_TankTemplate->GetTurretTurnSpeed() * 2) * updateTime);
+									}
+
 								}
-								if (Angle < 0.5f)
+								/* If the timer is 0 then it will create the shell*/
+								if (this->Timer <= 0)
 								{
-									Matrix(2).RotateLocalY(-2 * updateTime);
+									CVector3 TurretRot;
+									this->TurretWorldMatrix.DecomposeAffineEuler(NULL, &TurretRot, NULL);
+									CMatrix4x4 NewMatrix = Matrix(2) * Matrix();
+									Timer = 1.0f;
+									EntityManager.CreateTemplate("Projectile", "Shell Type 1", "Bullet.x");
+									EntityManager.CreateShell("Shell Type 1", GetName(), this->TurretWorldMatrix.Position(), TurretRot);
+									++this->ShootsFired;
+									Fired = true;
+									m_State = Evade;
 								}
-								m_Speed = 0.0f;
 
 							}
-							if (this->Timer <= 0)
+							else
 							{
-								CVector3 TurretRot;
-								this->TurretWorldMatrix.DecomposeAffineEuler(NULL, &TurretRot, NULL);
-								CMatrix4x4 NewMatrix = Matrix(2) * Matrix();
-								Timer = 1.0f;
-								EntityManager.CreateTemplate("Projectile", "Shell Type 1", "Bullet.x");
-								EntityManager.CreateShell("Shell Type 1", GetName(), this->TurretWorldMatrix.Position(), TurretRot);
 								m_State = Evade;
-								Fired = true;
+								Timer = 1.0f;
 							}
 						}
 						else
 						{
-							m_State = Patrol;
+							m_State = Evade;
+							Timer = 1.0f;
 						}
-
+					}
+					else
+					{
+						m_State = Evade;
+						Timer = 1.0f;
 					}
 				}
+				else
+				{
+					m_State = Evade;
+					Timer = 1.0f;
+				}
+			}
+			else
+			{
+				m_State = Ammo;
+				Timer = 1.0f;
+			}
+
+			/* If the tank is hit it will send this message out to all the other tanks on its team */
+			if (msg.type == Msg_Hit)
+			{
+				EntityManager.BeginEnumEntities("", "", "Tank");
+				CEntity* entity = EntityManager.EnumEntity();
+				while (entity != 0)
+				{
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == this->GetTeam())
+					{
+						if (TankEntity != this && TankEntity->GetShootsFired() != 10 && TankEntity->m_State != TankEntity->Dead &&
+							TankEntity->m_State != TankEntity->Aim && TankEntity->m_State != TankEntity->Ammo && TankEntity->m_State != TankEntity->Health)
+						{
+							TEntityUID UID = TankEntity->GetUID();
+							msg.type = Msg_Help;
+							//msg.from = SystemUID;
+							Messenger.SendMessage(UID, msg);
+						}
+					}
+					entity = EntityManager.EnumEntity();
+				}
+				EntityManager.EndEnumEntities();
+			}
+
+		}
+		/* This is used when the tanks need ammo, takes elements from other states so look above ^ */
+		if (m_State == Ammo)
+		{
+
+			EntityManager.BeginEnumEntities("", "", "AmmoCreate");
+			CEntity* entity = EntityManager.EnumEntity();
+			if (entity != NULL)
+			{
+				this->targetPos = entity->Position();
+				CMatrix4x4 BodyMatrix = Matrix(0) * Matrix(1);
+				CVector3 Facing = -BodyMatrix.ZAxis();
+				CVector3 DistanceVect = Matrix().Position() - targetPos;
+				DistanceVect.Normalise();
+				if (m_Speed < m_TankTemplate->GetMaxSpeed())
+				{
+					m_Speed += m_TankTemplate->GetAcceleration();
+				}
+				float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
+				float DotProduct = Dot(DistanceVect, BodyMatrix.XAxis());
+				if (Angle < 3.0f)
+				{
+					Matrix().FaceTarget(this->targetPos);
+					Matrix().MoveLocalZ(m_Speed * updateTime);
+				}
+				else
+				{
+					if (DotProduct > 0.0f)
+					{
+						Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+						Matrix().RotateLocalY((-m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+					}
+					if (DotProduct < -0.0f)
+					{
+						Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+						Matrix().RotateLocalY((m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+					}
+				}
+				if (SphereToSphere(Matrix().GetPosition(), this->targetPos))
+				{
+					AmmoEntity* AE = static_cast<AmmoEntity*>(entity);
+					this->ShootsFired = 0;
+					AE->PickedUp = true;
+					m_State = Patrol;
+				}
+			}
+			else
+			{
+				m_State = Patrol;
+			}
+			if (msg.type == Msg_Hit)
+			{
+				EntityManager.BeginEnumEntities("", "", "Tank");
+				CEntity* entity = EntityManager.EnumEntity();
+				while (entity != 0)
+				{
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == this->GetTeam())
+					{
+						if (TankEntity != this && TankEntity->GetShootsFired() != 10 && TankEntity->m_State != TankEntity->Dead &&
+							TankEntity->m_State != TankEntity->Aim && TankEntity->m_State != TankEntity->Ammo && TankEntity->m_State != TankEntity->Health)
+						{
+							TEntityUID UID = TankEntity->GetUID();
+							msg.type = Msg_Help;
+							//msg.from = SystemUID;
+							Messenger.SendMessage(UID, msg);
+						}
+					}
+					entity = EntityManager.EnumEntity();
+				}
+				EntityManager.EndEnumEntities();
+			}
+		}
+		/* This is the sames as the ammo create but with health instead, see above ^*/
+		if (m_State == Health)
+		{
+			EntityManager.BeginEnumEntities("", "", "HealthCreate");
+			CEntity* entity = EntityManager.EnumEntity();
+			if (entity != NULL)
+			{
+				this->targetPos = entity->Position();
+				CMatrix4x4 BodyMatrix = Matrix(0) * Matrix(1);
+				CVector3 Facing = -BodyMatrix.ZAxis();
+				CVector3 DistanceVect = Matrix().Position() - targetPos;
+				DistanceVect.Normalise();
+				if (m_Speed < m_TankTemplate->GetMaxSpeed())
+				{
+					m_Speed += m_TankTemplate->GetAcceleration();
+				}
+				float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
+				float DotProduct = Dot(DistanceVect, BodyMatrix.XAxis());
+				if (Angle < 3.0f)
+				{
+					Matrix().FaceTarget(this->targetPos);
+					Matrix().MoveLocalZ(m_Speed * updateTime);
+				}
+				else
+				{
+					if (DotProduct > 0.0f)
+					{
+						Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+						Matrix().RotateLocalY((-m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+					}
+					if (DotProduct < -0.0f)
+					{
+						Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+						Matrix().RotateLocalY((m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
+					}
+				}
+				if (SphereToSphere(Matrix().GetPosition(), this->targetPos))
+				{
+					AmmoEntity* AE = static_cast<AmmoEntity*>(entity);
+					this->m_HP += 50;
+					AE->PickedUp = true;
+					m_State = Patrol;
+				}
+			}
+			else
+			{
+				m_State = Patrol;
+			}
+			if (msg.type == Msg_Hit)
+			{
+				EntityManager.BeginEnumEntities("", "", "Tank");
+				CEntity* entity = EntityManager.EnumEntity();
+				while (entity != 0)
+				{
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == this->GetTeam())
+					{
+						if (TankEntity != this && TankEntity->GetShootsFired() != 10 && TankEntity->m_State != TankEntity->Dead &&
+							TankEntity->m_State != TankEntity->Aim && TankEntity->m_State != TankEntity->Ammo && TankEntity->m_State != TankEntity->Health)
+						{
+							TEntityUID UID = TankEntity->GetUID();
+							msg.type = Msg_Help;
+							//msg.from = SystemUID;
+							Messenger.SendMessage(UID, msg);
+						}
+					}
+					entity = EntityManager.EnumEntity();
+				}
+				EntityManager.EndEnumEntities();
 			}
 		}
 		if (m_State == Patrol)
 		{
-			float TankUIDT1 = GetTankUID(0);
-			float TankUIDT2 = GetTankUID(1);
+			if (PatrolPointer == PatrolList.size())
+			{
+				PatrolPointer = 0;
+			}
+			targetPos = PatrolList.at(PatrolPointer);
+			//m_Speed = 10.0f;
 			CMatrix4x4 BodyMatrix = Matrix(1) * Matrix();
 			CVector3 Facing = -BodyMatrix.ZAxis();
-			if (TankUIDT1 == this->GetUID())
+			if (SphereToSphere(BodyMatrix.Position(), targetPos))
 			{
-				if (SphereToSphere(Matrix().GetPosition(), PatrolPosT1[0]))
+				if (PatrolPointer == PatrolList.size())
 				{
-					this->AtTarget = true;
+					PatrolPointer = 0;
 				}
-				if (this->AtTarget == false)
+				targetPos = PatrolList.at(PatrolPointer);
+				++PatrolPointer;
+			}
+			if (m_Speed < m_TankTemplate->GetMaxSpeed())
+			{
+				m_Speed += m_TankTemplate->GetAcceleration();
+			}
+			CVector3 DistanceVect = Matrix().Position() - targetPos;
+			DistanceVect.Normalise();
+			float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
+			float DotProduct = Dot(DistanceVect, BodyMatrix.XAxis());
+			if (Angle < 3.0f)
+			{
+				Matrix().FaceTarget(targetPos);
+				Matrix().MoveLocalZ(m_Speed * updateTime);
+			}
+			else
+			{
+				if (DotProduct > 0.0f)
 				{
-					targetPos = PatrolPosT1[0];
-					CVector3 DistanceVect = Matrix().Position() - PatrolPosT1[0];
-					DistanceVect.Normalise();
-					float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
-					if (Angle < 0.5f)
-					{
-						Matrix().FaceTarget(targetPos);
-						Matrix().MoveLocalZ(m_Speed * updateTime);
-					}
-					else
-					{
-						Matrix().MoveLocalZ(m_Speed / 5 * updateTime);
-						Matrix().RotateLocalY(1.0f * updateTime);
-					}
+					Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+					Matrix().RotateLocalY(-(m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
 				}
-				if (SphereToSphere(Matrix().GetPosition(), PatrolPosT1[1]))
+				if (DotProduct < -0.0f)
 				{
-					this->AtTarget = false;
-				}
-				if (this->AtTarget == true)
-				{
-					targetPos = PatrolPosT1[1];
-					CVector3 DistanceVect = BodyMatrix.Position() - PatrolPosT1[1];
-					DistanceVect.Normalise();
-					float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
-					if (Angle < 0.5f)
-					{
-						Matrix().FaceTarget(targetPos);
-						Matrix().MoveLocalZ(m_Speed * updateTime);
-					}
-					else
-					{
-						Matrix().MoveLocalZ(m_Speed / 5 * updateTime);
-						Matrix().RotateLocalY(1.0f * updateTime);
-					}
+					Matrix().MoveLocalZ(m_TankTemplate->GetTurnSpeed() * updateTime);
+					Matrix().RotateLocalY((m_TankTemplate->GetTurnSpeed() / 2) * updateTime);
 				}
 			}
-			if (TankUIDT2 == this->GetUID())
+			UpdateTankTargets();
+			for (int i = 0; i < m_Target.size(); i++)
 			{
-				if (AtTarget == false)
+				CEntity* Tank = EntityManager.GetEntity(this->m_Target.at(i));
+				CTankEntity* TankEntity = static_cast<CTankEntity*>(Tank);
+				if (TankEntity->m_State != TankEntity->Dead)
 				{
-					targetPos = PatrolPosT2[0];
-					CVector3 DistanceVect = Matrix().Position() - PatrolPosT2[0];
-					DistanceVect.Normalise();
-					float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
-					if (Angle < 0.5f)
-					{
-						Matrix().FaceTarget(targetPos);
-						Matrix().MoveLocalZ(m_Speed * updateTime);
-					}
-					else
-					{
-						Matrix().MoveLocalZ(m_Speed / 5 * updateTime);
-						Matrix().RotateLocalY(1.0f * updateTime);
-					}
-				}
-				if (SphereToSphere(Matrix().GetPosition(), PatrolPosT2[0]))
-				{
-					AtTarget = true;
-				}
-				if (AtTarget == true)
-				{
-					targetPos = PatrolPosT2[1];
-					CVector3 DistanceVect = Matrix().Position() - PatrolPosT2[1];
-					DistanceVect.Normalise();
-					float Angle = AngleMath(BodyMatrix, Facing, DistanceVect);
-					if (Angle < 0.5f)
-					{
-						Matrix().FaceTarget(targetPos);
-						Matrix().MoveLocalZ(m_Speed * updateTime);
-					}
-					else
-					{
-						Matrix().MoveLocalZ(m_Speed / 5 * updateTime);
-						Matrix().RotateLocalY(1.0f * updateTime);
-					}
-				}
-				if (SphereToSphere(Matrix().GetPosition(), PatrolPosT2[1]))
-				{
-					AtTarget = false;
-				}
-			}
-			m_Speed = 10.0f;
-			m_TankTemplate->GetMaxSpeed();
-			m_Timer += m_TankTemplate->GetAcceleration();
-			if (m_Timer > m_TankTemplate->GetMaxSpeed())
-			{
-				m_Timer = m_TankTemplate->GetMaxSpeed();
-			}
-
-			for (int i = 0; i < 2; i++)
-			{
-				UpdateTankData(i);
-				if (m_Target != this->GetUID())
-				{
+					UpdateTankData(this->m_Target.at(i));
 					Angle = AngleMath(this->TurretWorldMatrix, this->TankFacingVector, this->DistanceVector);
-					if (Angle < 15.0f)
+					if (Angle < 15.0f && !LineOfSight(this->TankFacingVector, Matrix(), TankTarget))
 					{
+						SavedEnemyIndex = i;
 						m_State = Aim;
-					}
-					else
-					{
-						Matrix(2).RotateLocalY(1 * updateTime);
-					}
-				}
 
+					}
+
+				}
+			}
+			if (m_Target.size() == 0)
+			{
+				Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * updateTime);
+			}
+			Matrix(2).RotateLocalY(m_TankTemplate->GetTurretTurnSpeed() * updateTime);
+			if (msg.type == Msg_Hit)
+			{
+				EntityManager.BeginEnumEntities("", "", "Tank");
+				CEntity* entity = EntityManager.EnumEntity();
+				while (entity != 0)
+				{
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == this->GetTeam())
+					{
+						if (TankEntity != this && TankEntity->GetShootsFired() != 10 && TankEntity->m_State != TankEntity->Dead &&
+							TankEntity->m_State != TankEntity->Aim && TankEntity->m_State != TankEntity->Ammo && TankEntity->m_State != TankEntity->Health)
+						{
+							TEntityUID UID = TankEntity->GetUID();
+							msg.type = Msg_Help;
+							//msg.from = SystemUID;
+							Messenger.SendMessage(UID, msg);
+						}
+					}
+					entity = EntityManager.EnumEntity();
+				}
+				EntityManager.EndEnumEntities();
 			}
 		}
 
-		// Perform movement...
-		// Move along local Z axis scaled by update time
-		//Matrix().MoveLocalZ(m_Speed* updateTime);
+		if (m_State == Dead)
+		{
+			if (DeathTimer >= 0)
+			{
+				Matrix(2).MoveY(10 * updateTime);
+				Matrix(2).RotateZ(10 * updateTime);
+				DeathTimer -= updateTime;
+			}
+			else
+			{
+				if (DeathTimer2 <= 1.0f)
+				{
+					Matrix(2).MoveY(-10 * updateTime);
+					Matrix(2).RotateZ(-10 * updateTime);
+					DeathTimer2 += updateTime;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+
 		if (this->m_HP <= 0)
 		{
-			return false;
+			m_State = Dead;
 		}
 		return true; // Don't destroy the entity
 	}

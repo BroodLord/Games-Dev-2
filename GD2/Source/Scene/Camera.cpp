@@ -7,6 +7,7 @@
 
 #include <d3dx9.h>
 #include "MathDX.h"
+#include "CVector4.h"
 #include "Camera.h"
 
 namespace gen
@@ -109,18 +110,40 @@ void CCamera::Control( EKeyCode turnUp, EKeyCode turnDown,
 // Calculate the X and Y pixel coordinates for the corresponding to given world coordinate
 // using this camera. Pass the viewport width and height. Return false if the world coordinate
 // is behind the camera
-bool CCamera::PixelFromWorldPt( CVector3 worldPt, TUInt32 ViewportWidth, TUInt32 ViewportHeight,
-                                TInt32* X, TInt32* Y )
+bool CCamera::PixelFromWorldPt(CVector2* PixelPt, CVector3 worldPt, TUInt32 ViewportWidth, TUInt32 ViewportHeight)
 {
-	return false; // Placeholder code, fill in for User Interface assignment task
+	CVector4 viewportPt = CVector4(worldPt, 1.0f) * m_MatViewProj;
+	if (viewportPt.w < 0)
+	{
+		return false;
+	}
+
+	viewportPt.x /= viewportPt.w;
+	viewportPt.y /= viewportPt.w;
+
+	PixelPt->x = (viewportPt.x + 1.0f) * ViewportWidth * 0.5f;
+	PixelPt->y = (1.0f - viewportPt.y) * ViewportHeight * 0.5f;
+
+	return true;
 }
 
 // Calculate the world coordinates of a point on the near clip plane corresponding to given 
 // X and Y pixel coordinates using this camera. Pass the viewport width and height
-CVector3 CCamera::WorldPtFromPixel( TInt32 X, TInt32 Y, 
-                                    TUInt32 ViewportWidth, TUInt32 ViewportHeight )
+CVector3 CCamera::WorldPtFromPixel(CVector2 pixelPt, TUInt32 ViewportWidth, TUInt32 ViewportHeight)
 {
-	return CVector3::kOrigin; // Placeholder code, fill in for User Interface assignment task
+	CVector4 cameraPt;
+	cameraPt.x = pixelPt.x / (ViewportWidth * 0.5f) - 1.0f;
+	cameraPt.y = 1.0f - pixelPt.y / (ViewportHeight * 0.5f);
+	cameraPt.z = 0.0f;
+	cameraPt.w = m_NearClip;
+
+	cameraPt.x *= cameraPt.w;
+	cameraPt.y *= cameraPt.w;
+	cameraPt.z *= cameraPt.w;
+
+	CVector4 worldPt = cameraPt * Inverse(m_MatViewProj);
+
+	return CVector3(worldPt);
 }
 
 

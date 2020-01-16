@@ -128,9 +128,11 @@
   <ItemGroup>
     <ClCompile Include="Source\ParseLevel.cpp" />
     <ClCompile Include="Source\ParseXML.cpp" />
+    <ClCompile Include="Source\Scene\AmmoEntity.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Entity.cpp" />
     <ClCompile Include="Source\Scene\EntityManager.cpp" />
+    <ClCompile Include="Source\Scene\HealthCreate.cpp" />
     <ClCompile Include="Source\Scene\Light.cpp" />
     <ClCompile Include="Source\Scene\Messenger.cpp" />
     <ClCompile Include="Source\Common\CFatalException.cpp" />
@@ -160,9 +162,11 @@
   <ItemGroup>
     <ClInclude Include="Source\ParseLevel.h" />
     <ClInclude Include="Source\ParseXML.h" />
+    <ClInclude Include="Source\Scene\AmmoEntity.h" />
     <ClInclude Include="Source\Scene\Camera.h" />
     <ClInclude Include="Source\Scene\Entity.h" />
     <ClInclude Include="Source\Scene\EntityManager.h" />
+    <ClInclude Include="Source\Scene\HealthCreate.h" />
     <ClInclude Include="Source\Scene\Light.h" />
     <ClInclude Include="Source\Scene\Messenger.h" />
     <ClInclude Include="Source\Common\CFatalException.h" />

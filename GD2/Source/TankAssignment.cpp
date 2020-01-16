@@ -22,8 +22,16 @@ using namespace std;
 
 namespace gen
 {
-	TEntityUID Tanks[2];
-	int NumTanks = 2;
+	vector<TEntityUID> TanksUIDs;
+	vector<CTankEntity*> TankEntities;
+	CTankEntity* SelectedTank;
+	vector<CVector3> TeamOnePatrolList;
+	vector<CVector3> TeamTwoPatrolList;
+	CVector3 TankPoses[6];
+	int NumTanks = 6;
+	float AmmoTimer = 20.0f;
+	float HealthTimer = 30.0f;
+	bool SelectedTankBool = false;
 	//-----------------------------------------------------------------------------
 	// Constants
 	//-----------------------------------------------------------------------------
@@ -31,6 +39,7 @@ namespace gen
 	// Control speed
 	const float CameraRotSpeed = 2.0f;
 	float CameraMoveSpeed = 80.0f;
+	CEntity* NearestEntity = 0;
 
 	// Amount of time to pass before calculating new average update time
 	const float UpdateTimePeriod = 1.0f;
@@ -51,9 +60,13 @@ namespace gen
 	extern TUInt32 ViewportWidth;
 	extern TUInt32 ViewportHeight;
 
+
 	// Current mouse position
 	extern TUInt32 MouseX;
 	extern TUInt32 MouseY;
+	extern CVector2 MousePixel;
+
+	extern TEntityUID GetTankUID(int Team);
 
 	// Messenger class for sending messages to and between entities
 	extern CMessenger Messenger;
@@ -70,6 +83,7 @@ namespace gen
 	// Tank UIDs
 	TEntityUID TankA;
 	TEntityUID TankB;
+	int Counter = 0;
 
 	// Other scene elements
 	const int NumLights = 2;
@@ -97,53 +111,39 @@ namespace gen
 		InitialiseMethods();
 		LevelParser.ParseFile("Entities.xml");
 
-		//////////////////////////////////////////
-		// Create scenery templates and entities
-
-		// Create scenery templates - loads the meshes
-		// Template type, template name, mesh name
-		//EntityManager.CreateTemplate("Scenery", "Skybox", "Skybox.x");
-		//EntityManager.CreateTemplate("Scenery", "Floor", "Floor.x");
-		//EntityManager.CreateTemplate("Scenery", "Building", "Building.x");
-		//EntityManager.CreateTemplate("Scenery", "Tree", "Tree1.x");
-		//
-		//// Creates scenery entities
-		//// Type (template name), entity name, position, rotation, scale
-		//EntityManager.CreateEntity("Skybox", "Skybox", CVector3(0.0f, -10000.0f, 0.0f), CVector3::kZero, CVector3(10, 10, 10));
-		//EntityManager.CreateEntity("Floor", "Floor");
-		//EntityManager.CreateEntity("Building", "Building", CVector3(0.0f, 0.0f, 40.0f));
-		//for (int tree = 0; tree < 100; ++tree)
-		//{
-		//	// Some random trees
-		//	EntityManager.CreateEntity("Tree", "Tree",
-		//		CVector3(Random(-200.0f, 30.0f), 0.0f, Random(40.0f, 150.0f)),
-		//		CVector3(0.0f, Random(0.0f, 2.0f * kfPi), 0.0f));
-		//}
-
-
-		/////////////////////////////////
-		// Create tank templates
-
-		// Template type, template name, mesh name, top speed, acceleration, tank turn speed, turret
-		// turn speed, max HP and shell damage. These latter settings are for advanced requirements only
-		//EntityManager.CreateTankTemplate("Tank", "Rogue Scout", "HoverTank02.x",
-		//24.0f, 2.2f, 2.0f, kfPi / 3, 100, 20);
-		//EntityManager.CreateTankTemplate("Tank", "Oberon MkII", "HoverTank07.x",
-		//18.0f, 1.6f, 1.3f, kfPi / 4, 120, 35);
-		//
-		//// Template for tank shell
-		//EntityManager.CreateTemplate("Projectile", "Shell Type 1", "Bullet.x");
-
-
 		////////////////////////////////
 		// Create tank entities
-
 		// Type (template name), team number, tank name, position, rotation
-		//Tanks[0] = TankA = EntityManager.CreateTank("Rogue Scout", 0, "A-1", CVector3(-30.0f, 0.5f, -20.0f),
-		//	CVector3(0.0f, ToRadians(0.0f), 0.0f));
-		//Tanks[1] = TankB = EntityManager.CreateTank("Oberon MkII", 1, "B-1", CVector3(30.0f, 0.5f, 20.0f),
-		//	CVector3(0.0f, ToRadians(180.0f), 0.0f));
-
+		bool Team1Added = false;
+		bool Team0Added = false;
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		CEntity* entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			TEntityUID UID = entity->GetUID();
+			TanksUIDs.push_back(UID);
+			TankEntities.push_back(static_cast<CTankEntity*>(entity));
+			if (TankEntities.at(Counter)->GetTeam() == 0)
+			{
+				if (!Team0Added)
+				{
+					TeamOnePatrolList = TankEntities.at(Counter)->GetPatrolList();
+					Team0Added = true;
+				}
+			}
+			else if (TankEntities.at(Counter)->GetTeam() == 1)
+			{
+				if (!Team1Added)
+				{
+					TeamTwoPatrolList = TankEntities.at(Counter)->GetPatrolList();
+					Team1Added = true;
+				}
+			}
+			entity = EntityManager.EnumEntity();
+			++Counter;
+		}
+		EntityManager.EndEnumEntities();
+		Counter = 0;
 
 		/////////////////////////////
 		// Camera / light setup
@@ -266,7 +266,7 @@ namespace gen
 			NumUpdateTimes = 0;
 		}
 
-		// Write FPS text string
+		// Write FPS text string and Key button Text
 		stringstream outText;
 		if (AverageUpdateTime >= 0.0f)
 		{
@@ -274,34 +274,213 @@ namespace gen
 			RenderText(outText.str(), 2, 2, 0.0f, 0.0f, 0.0f);
 			RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
 			outText.str("");
+			outText << "-----------------------------";
+			RenderText(outText.str(), 2, 22, 0.0f, 0.0f, 0.0f);
+			RenderText(outText.str(), 0, 20, 1.0f, 1.0f, 0.0f);
+			outText.str("");
+			outText << "Start: " << "Key_1" << endl << "Stop: " << "Key_2" << endl << "Chase Camera: " << "Key_3" << endl << "Chase Camera Exit: " << "Key_4" << endl
+					<< "Mouse_RButton: " << " Pick Up Objects" << endl << "Mouse_LButton: " << "Click on Tank then a space in world to make" << endl 
+					<<" it move there (Puts into Evade State)";
+			RenderText(outText.str(), 2, 30, 0.0f, 0.0f, 0.0f);
+			RenderText(outText.str(), 0, 28, 1.0f, 1.0f, 0.0f);
+			outText.str("");
 		}
 		// Write FPS text string
 		RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
 		outText.str("");
 
-		// Write name next to each car
-			// Get car entity, then world position
-			// Write name next to each car
-		for (int Tank = 0; Tank < NumTanks; ++Tank)
+		int X, Y;
+		NearestEntity = NULL;
+		CVector2 entityPixel;
+		float nearestDistance = 50;
+		float pixelDistance;
+		/*Loops through all tanks and finds the nearest the mouse*/
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		CEntity* entity = EntityManager.EnumEntity();
+		while (entity != 0)
 		{
-			// Get car entity, then world position
-
-			CEntity* TankEntity = EntityManager.GetEntity(Tanks[Tank]);
-			if (TankEntity != NULL)
+			if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
 			{
-				CVector3 TankPT = TankEntity->Position();
-
-				// Convert car world position to pixel coordinate (picking in Camera class)
-				int X, Y;
-				if (MainCamera->PixelFromWorldPt(TankPT, ViewportWidth, ViewportHeight, &X, &Y))
+				pixelDistance = Distance(MousePixel, entityPixel);
+				if (pixelDistance < nearestDistance)
 				{
-					// If car is visible, draw its name
-					outText << TankEntity->Template()->GetName().c_str() << " " << TankEntity->GetName().c_str();
-					RenderText(outText.str(), X, Y, 0.6f, 1.0f, 0.6f, true);
+					NearestEntity = entity;
+					//RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
+					nearestDistance = pixelDistance;
+				}
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+		/*88888888888888888888888888888888888888888888888888888888888888*/
+		/*Loops through all tanks*/
+		EntityManager.BeginEnumEntities("", "", "Tank");
+		entity = EntityManager.EnumEntity();
+		//CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+		while (entity != 0)
+		{
+			CVector2 pixelPt;
+			/*When the key is hit, it will display additional infomation*/
+			if (KeyHeld(Key_0))
+			{
+				//CVector2 pixelPt;
+				if (MainCamera->PixelFromWorldPt(&pixelPt, entity->Position(), ViewportWidth, ViewportHeight))
+				{
+					
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					outText << "HP:" << TankEntity->GetHP() << endl << "Team: " << TankEntity->GetTeam() << endl << "ShootsFired: " << TankEntity->GetShootsFired() << "/10" << endl << " State: " << TankEntity->GetStateToString().c_str();
+					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.6f, 1.0f, 0.6f, true);
 					outText.str("");
 				}
 			}
+			/*If not pressed it will just display the name*/
+			else if (MainCamera->PixelFromWorldPt(&pixelPt, entity->Position(), ViewportWidth, ViewportHeight))
+			{
+				outText << entity->Template()->GetName().c_str() << " " << entity->GetName().c_str();
+				if (entity == NearestEntity)
+				{
+					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.0f, 1.0f, 5.0f, true);
+				}
+				else
+				{
+					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.6f, 1.0f, 0.6f, true);
+				}
+				outText.str("");
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
 
+		if (SelectedTankBool == false)
+		{
+			/*Will allow the user to select the tank*/
+			if (KeyHit(Mouse_LButton) && NearestEntity != NULL)
+			{
+				CTankEntity* TankEntity = static_cast<CTankEntity*>(NearestEntity);
+				if (TankEntity->m_State != TankEntity->Inactive)
+				{
+					SelectedTank = TankEntity;
+					SelectedTankBool = true;
+				}
+			}
+		}
+
+		/*The will put the selected tank into the eveade state with a point given by the mouse*/
+		if (SelectedTank != NULL)
+		{
+			if (SelectedTankBool == true)
+			{
+				if (KeyHit(Mouse_LButton))
+				{
+					CVector3 MousePointer = MainCamera->WorldPtFromPixel(MousePixel, ViewportWidth, ViewportHeight);
+					CVector3 RayCast = Normalise(MousePointer - MainCamera->Position());
+					CVector3 NewPos = MainCamera->Position() + ((-MainCamera->Position().y / RayCast.y) * RayCast);
+					SelectedTank->m_State = SelectedTank->Evade;
+					SelectedTank->SetTargetPos(NewPos);
+					SelectedTankBool = false;
+				}
+			}
+		}
+
+		/* The will run through all the scenery and allow it to be picked up apart from the floor*/
+		EntityManager.BeginEnumEntities("", "", "Scenery");
+		entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
+			{
+				if (entity->GetName() != "Floor")
+				{
+					pixelDistance = Distance(MousePixel, entityPixel);
+					if (pixelDistance < nearestDistance)
+					{
+						NearestEntity = entity;
+						//RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
+						nearestDistance = pixelDistance;
+					}
+				}
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+
+		
+		if (NearestEntity != NULL)
+		{
+			if (KeyHeld(Mouse_RButton))
+			{
+				CVector3 MousePointer = MainCamera->WorldPtFromPixel(MousePixel, ViewportWidth, ViewportHeight);
+				CVector3 RayCast = Normalise(MousePointer - MainCamera->Position());
+				CVector3 NewPos = MainCamera->Position() + ((-MainCamera->Position().y / RayCast.y) * RayCast);
+				//CVector3 CameraPos = MainCamera->Position() + RayCast * 100;
+				NearestEntity->Position().x = NewPos.x;
+				NearestEntity->Position().y = NewPos.y;
+				NearestEntity->Position().z = NewPos.z;
+			}
+		}
+		/* This allows the ammoCreate to be picked up */
+		EntityManager.BeginEnumEntities("", "", "AmmoCreate");
+		entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
+			{
+					pixelDistance = Distance(MousePixel, entityPixel);
+					if (pixelDistance < nearestDistance)
+					{
+						NearestEntity = entity;
+						//RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
+						nearestDistance = pixelDistance;
+					}
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+
+		if (NearestEntity != NULL)
+		{
+			if (KeyHeld(Mouse_RButton))
+			{
+				CVector3 MousePointer = MainCamera->WorldPtFromPixel(MousePixel, ViewportWidth, ViewportHeight);
+				CVector3 RayCast = Normalise(MousePointer - MainCamera->Position());
+				CVector3 NewPos = MainCamera->Position() + ((-MainCamera->Position().y / RayCast.y) * RayCast);
+				//CVector3 CameraPos = MainCamera->Position() + RayCast * 100;
+				NearestEntity->Position().x = NewPos.x;
+				NearestEntity->Position().y = NewPos.y;
+				NearestEntity->Position().z = NewPos.z;
+			}
+		}
+		/* This allows the HealthCreate to be picked up */
+		EntityManager.BeginEnumEntities("", "", "HealthCreate");
+		entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			if (MainCamera->PixelFromWorldPt(&entityPixel, entity->Position(), ViewportWidth, ViewportHeight))
+			{
+				pixelDistance = Distance(MousePixel, entityPixel);
+				if (pixelDistance < nearestDistance)
+				{
+					NearestEntity = entity;
+					//RenderText(outText.str(), 0, 0, 1.0f, 1.0f, 0.0f);
+					nearestDistance = pixelDistance;
+				}
+			}
+			entity = EntityManager.EnumEntity();
+		}
+		EntityManager.EndEnumEntities();
+
+		if (NearestEntity != NULL)
+		{
+			if (KeyHeld(Mouse_RButton))
+			{
+				CVector3 MousePointer = MainCamera->WorldPtFromPixel(MousePixel, ViewportWidth, ViewportHeight);
+				CVector3 RayCast = Normalise(MousePointer - MainCamera->Position());
+				CVector3 NewPos = MainCamera->Position() + ((-MainCamera->Position().y / RayCast.y) * RayCast);
+				//CVector3 CameraPos = MainCamera->Position() + RayCast * 100;
+				NearestEntity->Position().x = NewPos.x;
+				NearestEntity->Position().y = NewPos.y;
+				NearestEntity->Position().z = NewPos.z;
+			}
 		}
 	}
 
@@ -319,29 +498,177 @@ namespace gen
 
 		// System messages
 		// Go
+
+		/* Runs through all the Scenery */
+		EntityManager.BeginEnumEntities("", "", "Scenery");
+		CEntity* entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			/* If the entity is a quad it will update the position*/
+			if (entity->GetName() == "Quad")
+			{
+				CEntity* EntityArray[4];
+				for (int i = 0; i < 4; i++)
+				{
+					EntityArray[i] = entity;
+					entity = EntityManager.EnumEntity();
+				}
+				/* Runs through all the tanks so it get set there patrol points to the quads */
+				for (int j = 0; j < TankEntities.size(); j++)
+				{
+					if (TankEntities.at(j)->GetTeam() == 0)
+					{
+						for (int i = 0; i < TeamOnePatrolList.size(); i++)
+						{
+							TeamOnePatrolList[i] = EntityArray[i]->Position();
+						}
+						TankEntities.at(j)->SetPatrolList(TeamOnePatrolList);
+					}
+				}
+
+			}
+			else
+			{
+				entity = EntityManager.EnumEntity();
+			}
+		}
+		EntityManager.EndEnumEntities();
+
+		/* Runs through all the Scenery */
+		EntityManager.BeginEnumEntities("", "", "Scenery");
+		entity = EntityManager.EnumEntity();
+		while (entity != 0)
+		{
+			/* If the entity is a quad it will update the position*/
+			if (entity->GetName() == "Quad2")
+			{
+				CEntity* EntityArray[4];
+				for (int i = 0; i < 4; i++)
+				{
+					EntityArray[i] = entity;
+					entity = EntityManager.EnumEntity();
+				}
+				/* Runs through all the tanks so it get set there patrol points to the quads */
+				for (int j = 0; j < TankEntities.size(); j++)
+				{
+					if (TankEntities.at(j)->GetTeam() == 1)
+					{
+						for (int i = 0; i < TeamTwoPatrolList.size(); i++)
+						{
+							TeamTwoPatrolList[i] = EntityArray[i]->Position();
+						}
+						TankEntities.at(j)->SetPatrolList(TeamTwoPatrolList);
+					}
+
+				}
+			}
+			else
+			{
+				entity = EntityManager.EnumEntity();
+			}
+		}
+		EntityManager.EndEnumEntities();
+
+		/* When 1 is pressed it will send a message to all the tanks to start */
 		if (KeyHit(Key_1))
 		{
 			SMessage msg;
-			for (int i = 0; i < 2; ++i)
+			EntityManager.BeginEnumEntities("", "", "Tank");
+			CEntity* entity = EntityManager.EnumEntity();
+			while (entity != 0)
 			{
-
+				TEntityUID UID = entity->GetUID();
+				//TanksUIDs[i] = UID;
 				msg.type = Msg_Start;
 				msg.from = SystemUID;
-				Messenger.SendMessage(Tanks[i], msg);
-
+				Messenger.SendMessage(UID, msg);
+				entity = EntityManager.EnumEntity();
 			}
+			EntityManager.EndEnumEntities();
+		}
+
+		/* This will allow the user to use the chase camera */
+		if (TanksUIDs.at(Counter) == TankEntities.at(Counter)->GetUID())
+		{
+			if (TankEntities.at(Counter)->GetFollowed() == false)
+			{
+				if (KeyHit(Key_3))
+				{
+					/*Sets the chase camera to the current tank*/
+					TankEntities.at(Counter)->SetFollowed(true);
+				}
+			}
+		}
+		else
+		{
+			/*Increments Counter so it can watch the next tank*/
+			Counter++;
+		}
+		/* This will switch to the next tank */
+		if (KeyHit(Key_3) && TankEntities.at(Counter)->GetFollowed() == true)
+		{
+			/*Resets the tank propteries before switch*/
+			TankEntities.at(Counter)->SetFollowed(false);
+			++Counter;
+			/*If the counter goes above the max then reset*/
+			if (Counter >= TankEntities.size())
+			{
+				Counter = 0;
+			}
+			TankEntities.at(Counter)->SetFollowed(true);
+		}
+		/* This will constantly update the camera so it can be behind the tank */
+		if (TankEntities.at(Counter)->GetFollowed() == true && TanksUIDs.at(Counter) == TankEntities.at(Counter)->GetUID())
+		{
+			MainCamera->Position() = TankEntities.at(Counter)->Position();
+			MainCamera->Position().y += 3.0f;
+			//MainCamera->Matrix().FaceTarget(TankEntities[Counter]->Position().kZAxis);
+		}
+		/* This will exit the camera chase */
+		if (KeyHit(Key_4))
+		{
+			TankEntities.at(Counter)->SetFollowed(false);
+			Counter = 0;
+		}
+
+		/* This will spawn an ammo create after a set amount of time */
+		if (AmmoTimer < 0)
+		{
+			EntityManager.CreateAmmoCreate("AmmoCreate.01", "", CVector3(Random(-20, 20), 10.0f, Random(-20, 20)), { 0,0,0 }, { 0.2,0.2,0.2 });
+			AmmoTimer = 20.0f;
+		}
+		else
+		{
+			AmmoTimer -= updateTime;
+		}
+		/* This will spawn an health create after a set amount of time */
+		if (HealthTimer < 0)
+		{
+			EntityManager.CreateHealthCreate("HealthCreate.01", "", CVector3(Random(-20, 20), 10.0f, Random(-20, 20)), { 0,0,0 }, { 0.2,0.2,0.2 });
+			HealthTimer = 30.0f;
+		}
+		else
+		{
+			HealthTimer -= updateTime;
 		}
 
 		// Stop
+		/* When 2 is pressed it will send a message to all the tanks telling them to stop */
 		if (KeyHit(Key_2))
 		{
-			for (int i = 0; i < 2; ++i)
+			SMessage msg;
+			EntityManager.BeginEnumEntities("", "", "Tank");
+			CEntity* entity = EntityManager.EnumEntity();
+			while (entity != 0)
 			{
-				SMessage msg;
+				TEntityUID UID = entity->GetUID();
+				//TanksUIDs[i] = UID;
 				msg.type = Msg_Stop;
 				msg.from = SystemUID;
-				Messenger.SendMessage(Tanks[i], msg);
+				Messenger.SendMessage(UID, msg);
+				entity = EntityManager.EnumEntity();
 			}
+			EntityManager.EndEnumEntities();
 		}
 
 		// Move the camera

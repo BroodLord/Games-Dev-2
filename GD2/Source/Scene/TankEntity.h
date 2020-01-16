@@ -128,7 +128,8 @@ namespace gen
 			CTankTemplate* tankTemplate,
 			TEntityUID      UID,
 			TUInt32         team,
-			const string& name = "",
+			const string& name,
+			vector<CVector3> patrolPoints,
 			const CVector3& position = CVector3::kOrigin,
 			const CVector3& rotation = CVector3(0.0f, 0.0f, 0.0f),
 			const CVector3& scale = CVector3(1.0f, 1.0f, 1.0f)
@@ -141,6 +142,18 @@ namespace gen
 	//	Public interface
 	public:
 
+		// States available for a tank - placeholders for shell code
+		enum EState
+		{
+			Inactive,
+			Patrol,
+			Ammo,
+			Health,
+			Dead,
+			Aim,
+			Evade
+		};
+		EState   m_State; // Current state
 		/////////////////////////////////////
 		// Getters
 
@@ -152,6 +165,95 @@ namespace gen
 		{
 			return m_HP;
 		}
+		TInt32 GetFollowed()
+		{
+			return BeingFollowed;
+		}
+		void SetFollowed(bool Set)
+		{
+			BeingFollowed = Set;
+		}
+		bool GetSelected()
+		{
+			return Selected;
+		}
+		void SetSelected(bool Set)
+		{
+			Selected = Set;
+		}
+		TInt32 GetShootsFired()
+		{
+			return ShootsFired;
+		}
+		void SetTargetPos(CVector3 Set)
+		{
+			RandomPos = Set;
+		}
+		CVector3 GetTargetPos()
+		{
+			return RandomPos;
+		}
+		vector<CVector3> GetPatrolList()
+		{
+			return PatrolList;
+		}
+		void SetPatrolList(vector<CVector3> PL)
+		{
+			PatrolList.clear();
+			for (int i = 0; i < PL.size(); i++)
+			{
+				PatrolList.push_back(PL.at(i));
+			}
+		}
+		int GetShellDamageTE()
+		{
+			return m_TankTemplate->GetShellDamage();
+		}
+		void SetTeam(int Set)
+		{
+			m_Team = Set;
+		}
+		string GetState()
+		{
+			return to_string(m_State);
+		}
+		string GetStateToString()
+		{
+			switch (m_State)
+			{
+			case gen::CTankEntity::Inactive:
+				return "Inactive";
+				break;
+			case gen::CTankEntity::Patrol:
+				return "Patrol";
+				break;
+			case gen::CTankEntity::Ammo:
+				return "Ammo";
+				break;
+			case gen::CTankEntity::Health:
+				return "Health";
+				break;
+			case gen::CTankEntity::Dead:
+				return "Dead";
+				break;
+			case gen::CTankEntity::Aim:
+				return "Aim";
+				break;
+			case gen::CTankEntity::Evade:
+				return "Evade";
+				break;
+			//case gen::CTankEntity::Stop:
+			//	return "Stop";
+			//	break;
+			//case gen::CTankEntity::Go:
+			//	return "Go";
+			//	break;
+			}
+		}
+		int GetTeam()
+		{
+			return m_Team;
+		}
 
 		/////////////////////////////////////
 		// Update
@@ -161,7 +263,7 @@ namespace gen
 		// Keep as a virtual function in case of further derivation
 		virtual bool Update(TFloat32 updateTime);
 		void UpdateTankData(int Index);
-
+		void UpdateTankTargets();
 
 		/////////////////////////////////////
 		//	Private interface
@@ -169,17 +271,6 @@ namespace gen
 
 		/////////////////////////////////////
 		// Types
-
-		// States available for a tank - placeholders for shell code
-		enum EState
-		{
-			Inactive,
-			Patrol,
-			Aim,
-			Evade,
-			Stop,
-			Go,
-		};
 
 
 		/////////////////////////////////////
@@ -192,24 +283,28 @@ namespace gen
 		TUInt32  m_Team;  // Team number for tank (to know who the enemy is)
 		TFloat32 m_Speed; // Current speed (in facing direction)
 		TInt32   m_HP;    // Current hit points for the tank
-
-		CVector3 targetPos;
-		TEntityUID m_Target;
+		TInt32 ShootsFired = 0;
+		vector<TEntityUID> m_Target;
 		CEntity* TankTarget;
 		CTankEntity* TargetTank;
 		CMatrix4x4 TurretWorldMatrix;
 		CVector3 TankFacingVector;
 		CVector3 DistanceVector;
-		CVector3 PatrolPosT1[2] = { {-30, 0.5, -20 }, {-30, 0.5, 40} };
-		CVector3 PatrolPosT2[2] = { {30, 0.5, 20 }, {30, 0.5, -40} };
+		vector<CVector3> PatrolList;
+		int PatrolPointer = 0;
+		CVector3 targetPos;
 		float Timer = 1.0f;
-		CVector3 RandomPos = CVector3(Random(Matrix().Position().x - 40, Matrix().Position().x + 40), 0.5, Random(Matrix().Position().x - 40, Matrix().Position().x + 40));
+		float DeathTimer = 1.0f;
+		float DeathTimer2 = 0;
+		int SavedEnemyIndex;
+		CVector3 RandomPos = CVector3(Random( -20, 20), 0.5, Random(-20, 20));
 		bool AtTarget = false;
 		float Angle;
 		bool Fired = false;
+		bool BeingFollowed = false;
+		bool Selected = true;
 
 		// Tank state
-		EState   m_State; // Current state
 		TFloat32 m_Timer; // A timer used in the example update function
 	};
 

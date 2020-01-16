@@ -114,15 +114,25 @@ namespace gen
 		string   m_EntityType;
 		string   m_EntityName;
 		int	     m_EntityTeam;
+		//int		 m_EntityHP;
 		CVector3 m_Pos;
+		vector<CVector3> m_PatrolPoints;
 		CVector3 m_Rot;
 		CVector3 m_Scale;
+		int m_TemplateTeam;
 		int m_TemplateHP;
 		int m_TemplateShellDamage;
 		float m_TemplateTurretTurnSpeed;
 		float m_TemplateMaxSpeed;
 		float m_TemplateAcceleration;
 		float m_TemplateTurnSpeed;
+		//int m_TemplateAmount;
+		//float m_TemplateX;
+		//float m_TemplateY;
+		//float m_TemplateZ;
+		//float m_TemplateMaxX;
+		//float m_TemplateMaxY;
+		//float m_TemplateMaxZ;
 	};
 
 

@@ -4,10 +4,14 @@
 	Windows functions and DirectX setup
 ********************************************/
 
+#define GET_X_LPARAM(lp)                        ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp)                        ((int)(short)HIWORD(lp))
+
 #include <windows.h>
 #include <d3d10.h>
 #include <d3dx10.h>
 
+#include "CVector2.h"
 #include "Defines.h"
 #include "Input.h"
 #include "CTimer.h"
@@ -52,6 +56,7 @@ namespace gen
 	TUInt32 ViewportWidth;
 	TUInt32 ViewportHeight;
 
+	CVector2 MousePixel;
 	// Current mouse position
 	TUInt32 MouseX;
 	TUInt32 MouseY;
@@ -190,7 +195,26 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		gen::KeyDownEvent(eKeyCode);
 		break;
 	}
-
+	case WM_LBUTTONDOWN:
+	{
+		gen::KeyDownEvent(gen::Mouse_LButton);
+		break;
+	}
+	case WM_LBUTTONUP:
+	{
+		gen::KeyUpEvent(gen::Mouse_LButton);
+		break;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		gen::KeyDownEvent(gen::Mouse_RButton);
+		break;
+	}
+	case WM_RBUTTONUP:
+	{
+		gen::KeyUpEvent(gen::Mouse_RButton);
+		break;
+	}
 	case WM_KEYUP:
 	{
 		gen::EKeyCode eKeyCode = static_cast<gen::EKeyCode>(wParam);
@@ -199,9 +223,15 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_MOUSEMOVE:
 	{
-		gen::MouseX = MAKEPOINTS(lParam).x;
-		gen::MouseY = MAKEPOINTS(lParam).y;
+		gen::MousePixel.x = static_cast<gen::TFloat32>(GET_X_LPARAM(lParam));
+		gen::MousePixel.y = static_cast<gen::TFloat32>(GET_Y_LPARAM(lParam));
+		break;
 	}
+	//case WM_MOUSEMOVE:
+	//{
+	//	gen::MouseX = MAKEPOINTS(lParam).x;
+	//	gen::MouseY = MAKEPOINTS(lParam).y;
+	//}
 	}
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);

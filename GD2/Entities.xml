@@ -10,17 +10,22 @@
     <EntityTemplate Type="Scenery" Name="Floor" Mesh="Floor.x"/>
     <EntityTemplate Type="Scenery" Name="Building" Mesh="Building.x"/>
     <EntityTemplate Type="Scenery" Name="Tree" Mesh="Tree1.x"/>
-    
-    <EntityTemplate Type="Tank" Name="Rogue Scout" Mesh="HoverTank02.x"/>
-    <EntityTemplate Type="Tank" Name="Oberon MkII" Mesh="HoverTank07.x"/>
+    <EntityTemplate Type="Scenery" Name="Quad" Mesh="Quad.x"/>
+    <EntityTemplate Type="Scenery" Name="Quad2" Mesh="Quad2.x"/>
+    <EntityTemplate Type="AmmoCreate" Name="AmmoCreate.01" Mesh="block1.x"/>
+    <EntityTemplate Type="HealthCreate" Name="HealthCreate.01" Mesh="block.x"/>
+    <EntityTemplate Type="Tank" Name="Rogue_Heavy" Mesh="HoverTank02.x" MaxSpeed ="10.0" Acceleration ="2.0" TurnSpeed ="3.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="30" />
+    <EntityTemplate Type="Tank" Name="Rogue_Scout" Mesh="HoverTank03.x" MaxSpeed ="16.0" Acceleration ="2.0" TurnSpeed ="5.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="10" />
+    <EntityTemplate Type="Tank" Name="Rogue_Light" Mesh="HoverTank04.x" MaxSpeed ="14.0" Acceleration ="2.0" TurnSpeed ="4.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="20" />
+    <EntityTemplate Type="Tank" Name="Oberon_MkI" Mesh="HoverTank07.x" MaxSpeed ="10.0" Acceleration ="2.0" TurnSpeed ="3.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="30"  />
+    <EntityTemplate Type="Tank" Name="Oberon_MkII" Mesh="HoverTank08.x" MaxSpeed ="16.0" Acceleration ="2.0" TurnSpeed ="5.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="10" />
+    <EntityTemplate Type="Tank" Name="Oberon_MkIII" Mesh="HoverTank06.x" MaxSpeed ="14.0" Acceleration ="2.0" TurnSpeed ="4.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="20"/>
 
   </Templates>
   <!-- End of Entity Types -->
-
-
   <!-- Scene Setup -->
   <Entities>
-
+    
     <!-- Environment Positions -->
     <Entity Type="Skybox" Name="Skybox">
       <Position X="0.0" Y="-10000.0" Z="0.0"/>
@@ -28,23 +33,109 @@
     <Entity Type="Floor" Name="Floor">
       <Position X="0.0" Y="0.0" Z="0.0"/>
     </Entity>
-    <Entity Type="Building" Name="Bulding">
-      <Position X="0.0" Y="0.0" Z="40.0"/>
+    <Entity Type="Building" Name="Building">
+      <Position X="0.0" Y="0.0" Z="30.0"/>
     </Entity>
-    <Entity Type="Tree" Name="Tree">
-      <Position X="0.0" Y="0.5" Z="0.0"/>
+    <Entity Type="Building" Name="Building">
+      <Position X="0.0" Y="0.0" Z="0.0"/>
     </Entity>
+    <Entity Type="Building" Name="Building">
+      <Position X="0.0" Y="0.0" Z="-30.0"/>
+    </Entity>
+    <Loop Type ="Tree" Name="Tree" Amount="100" X="-200.0" Y="0.5" Z="40.0" MaxX="30.0" MaxY="0.0" MaxZ ="150.0">
+    </Loop>
 
-     <!--Object Positions--> 
-    <Entity Type="Rogue Scout" Name="Rogue Scout">
+    <Entity Type="Quad" Name="Quad">
+      <Position X="-20.0" Y="0.0" Z="0.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad" Name="Quad">
+      <Position X="-40.0" Y="0.0" Z="20.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad" Name="Quad">
+      <Position X="-60.0" Y="0.0" Z="0.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad" Name="Quad">
+      <Position X="-40.0" Y="0.0" Z="-20.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+        <!--Object Positions-->
+    <PatrolPoint X="-20" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="20"/>
+    <PatrolPoint X="-60" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="-20"/>
+    <TankEntity Type="Rogue_Heavy" Name="A-1" Team="0">
       <Position X="-30.0" Y="0.5" Z="-20.0"/>
-    </Entity>
-    <Entity Type="Oberon MkII" Name="Oberon MKII">
-      <Position X="30.0" Y="0.5" Z="20.0"/>
-      <Rotation X="0.0" Y="180.0" Z="0.0"/>
-    </Entity>
+      <Rotation X="0.0" Y="0.0" Z="0.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
+    <PatrolPoint X="-20" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="20"/>
+    <PatrolPoint X="-60" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="-20"/>
+    <TankEntity Type="Rogue_Scout" Name="A-2" Team="0">
+      <Position X="-50.0" Y="0.5" Z="-20.0"/>
+      <Rotation X="0.0" Y="0.0" Z="0.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
+    <PatrolPoint X="-20" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="20"/>
+    <PatrolPoint X="-60" Y="0.5" Z="0"/>
+    <PatrolPoint X="-40" Y="0.5" Z="-20"/>
+    <TankEntity Type="Rogue_Light" Name="A-3" Team="0">
+      <Position X="-70.0" Y="0.5" Z="-20.0"/>
+      <Rotation X="0.0" Y="0.0" Z="0.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
 
-  </Entities>
+    <Entity Type="Quad2" Name="Quad2">
+      <Position X="20.0" Y="0.0" Z="0.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad2" Name="Quad2">
+      <Position X="40.0" Y="0.0" Z="20.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad2" Name="Quad2">
+      <Position X="60.0" Y="0.0" Z="0.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    <Entity Type="Quad2" Name="Quad2">
+      <Position X="40.0" Y="0.0" Z="-20.0"/>
+      <Scale X="0.2" Y="0.01" Z="0.2"/>
+    </Entity>
+    
+    <PatrolPoint X="20" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="20"/>
+    <PatrolPoint X="60" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="-20"/>
+    <Rotation X="0.0" Y="180.0" Z="0.0"/>
+    <TankEntity Type="Oberon_MkI" Name="B-1" Team="1">
+      <Position X="30.0" Y="0.5" Z="-20.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
+    <PatrolPoint X="20" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="20"/>
+    <PatrolPoint X="60" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="-20"/>
+    <Rotation X="0.0" Y="180.0" Z="0.0"/>
+    <TankEntity Type="Oberon_MkII" Name="B-2" Team="1">
+      <Position X="50.0" Y="0.5" Z="-20.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
+    <PatrolPoint X="20" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="20"/>
+    <PatrolPoint X="60" Y="0.5" Z="0"/>
+    <PatrolPoint X="40" Y="0.5" Z="-20"/>
+    <Rotation X="0.0" Y="180.0" Z="0.0"/>
+    <TankEntity Type="Oberon_MkIII" Name="B-3" Team="1">
+      <Position X="70.0" Y="0.5" Z="-20.0"/>
+      <Scale X="1.0" Y="1.0" Z="1.0"/>
+    </TankEntity>
+    
+</Entities>
   <!-- End of Scene Setup -->
 
 </Level>
