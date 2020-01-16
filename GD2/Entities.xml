@@ -13,6 +13,7 @@
     <EntityTemplate Type="Scenery" Name="Quad" Mesh="Quad.x"/>
     <EntityTemplate Type="Scenery" Name="Quad2" Mesh="Quad2.x"/>
     <EntityTemplate Type="AmmoCreate" Name="AmmoCreate.01" Mesh="block1.x"/>
+    <EntityTemplate Type="Projectile" Name="Shell Type 1" Mesh= "Bullet.x"/>
     <EntityTemplate Type="HealthCreate" Name="HealthCreate.01" Mesh="block.x"/>
     <EntityTemplate Type="Tank" Name="Rogue_Heavy" Mesh="HoverTank02.x" MaxSpeed ="10.0" Acceleration ="2.0" TurnSpeed ="3.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="30" />
     <EntityTemplate Type="Tank" Name="Rogue_Scout" Mesh="HoverTank03.x" MaxSpeed ="16.0" Acceleration ="2.0" TurnSpeed ="5.0" TurretTurnSpeed ="2.5" MaxHP ="100" ShellDamage ="10" />

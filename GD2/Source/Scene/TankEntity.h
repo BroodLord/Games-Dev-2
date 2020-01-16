@@ -301,6 +301,7 @@ namespace gen
 		bool AtTarget = false;
 		float Angle;
 		bool Fired = false;
+		bool Picked = false;
 		bool BeingFollowed = false;
 		bool Selected = true;
 

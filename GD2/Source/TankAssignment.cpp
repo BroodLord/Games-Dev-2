@@ -32,6 +32,7 @@ namespace gen
 	float AmmoTimer = 20.0f;
 	float HealthTimer = 30.0f;
 	bool SelectedTankBool = false;
+	int SavedIndex = 0;
 	//-----------------------------------------------------------------------------
 	// Constants
 	//-----------------------------------------------------------------------------
@@ -329,7 +330,21 @@ namespace gen
 					
 					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
 					outText << "HP:" << TankEntity->GetHP() << endl << "Team: " << TankEntity->GetTeam() << endl << "ShootsFired: " << TankEntity->GetShootsFired() << "/10" << endl << " State: " << TankEntity->GetStateToString().c_str();
-					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.6f, 1.0f, 0.6f, true);
+					if (TankEntity->GetTeam() == 0)
+					{
+						RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.2f, 1.0f, 0.2f, true);
+					}
+					else
+					{
+						RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 1.0f, 0.2f, 0.2f, true);
+					}
+					if (SelectedTank != NULL)
+					{
+						if (SelectedTank->GetUID() == TankEntity->GetUID())
+						{
+							RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 1.0f, 1.0f, 1.0f, true);
+						}
+					}
 					outText.str("");
 				}
 			}
@@ -339,11 +354,26 @@ namespace gen
 				outText << entity->Template()->GetName().c_str() << " " << entity->GetName().c_str();
 				if (entity == NearestEntity)
 				{
-					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.0f, 1.0f, 5.0f, true);
+					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 1.0f, 1.0f, 1.0f, true);
 				}
 				else
 				{
-					RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.6f, 1.0f, 0.6f, true);
+					CTankEntity* TankEntity = static_cast<CTankEntity*>(entity);
+					if (TankEntity->GetTeam() == 0)
+					{
+						RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 0.2f, 1.0f, 0.2f, true);
+					}
+					else
+					{
+						RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 1.0f, 0.2f, 0.2f, true);
+					}
+					if (SelectedTank != NULL)
+					{
+						if (SelectedTank->GetUID() == TankEntity->GetUID())
+						{
+							RenderText(outText.str(), (int)pixelPt.x, (int)pixelPt.y, 1.0f, 1.0f, 1.0f, true);
+						}
+					}
 				}
 				outText.str("");
 			}
@@ -370,6 +400,7 @@ namespace gen
 		{
 			if (SelectedTankBool == true)
 			{
+				outText.str("");
 				if (KeyHit(Mouse_LButton))
 				{
 					CVector3 MousePointer = MainCamera->WorldPtFromPixel(MousePixel, ViewportWidth, ViewportHeight);
@@ -377,6 +408,7 @@ namespace gen
 					CVector3 NewPos = MainCamera->Position() + ((-MainCamera->Position().y / RayCast.y) * RayCast);
 					SelectedTank->m_State = SelectedTank->Evade;
 					SelectedTank->SetTargetPos(NewPos);
+					SelectedTank = NULL;
 					SelectedTankBool = false;
 				}
 			}
@@ -611,11 +643,15 @@ namespace gen
 			TankEntities.at(Counter)->SetFollowed(false);
 			++Counter;
 			/*If the counter goes above the max then reset*/
-			if (Counter >= TankEntities.size())
+			if (Counter == TankEntities.size())
 			{
 				Counter = 0;
 			}
 			TankEntities.at(Counter)->SetFollowed(true);
+			while (TanksUIDs.at(Counter) != TankEntities.at(Counter)->GetUID())
+			{
+				Counter++;
+			}
 		}
 		/* This will constantly update the camera so it can be behind the tank */
 		if (TankEntities.at(Counter)->GetFollowed() == true && TanksUIDs.at(Counter) == TankEntities.at(Counter)->GetUID())

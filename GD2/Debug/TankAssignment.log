@@ -1,31 +1,20 @@
-﻿  TankEntity.cpp
+﻿  TankAssignment.cpp
 D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(300,62): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
 D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(300,39): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
 D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(203,22): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.cpp(179,15): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.cpp(264,23): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.cpp(403,25): warning C4018: '<': signed/unsigned mismatch
-  TankAssignment.cpp
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.cpp(701,22): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(300,62): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(300,39): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(203,22): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(292,10): warning C4101: 'Y': unreferenced local variable
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(292,7): warning C4101: 'X': unreferenced local variable
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(517,23): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(521,25): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(552,23): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(556,25): warning C4018: '<': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(608,71): warning C4805: '==': unsafe mix of type 'gen::TInt32' and type 'bool' in operation
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(614,16): warning C4018: '>=': signed/unsigned mismatch
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(621,6): warning C4805: '==': unsafe mix of type 'gen::TInt32' and type 'bool' in operation
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(637,95): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(637,71): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(637,133): warning C4305: 'argument': truncation from 'double' to 'const gen::TFloat32'
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(647,99): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(647,75): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
-  Generating Code...
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(647,137): warning C4305: 'argument': truncation from 'double' to 'const gen::TFloat32'
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(293,10): warning C4101: 'Y': unreferenced local variable
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(293,7): warning C4101: 'X': unreferenced local variable
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(549,23): warning C4018: '<': signed/unsigned mismatch
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(553,25): warning C4018: '<': signed/unsigned mismatch
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(584,23): warning C4018: '<': signed/unsigned mismatch
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(588,25): warning C4018: '<': signed/unsigned mismatch
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(640,71): warning C4805: '==': unsafe mix of type 'gen::TInt32' and type 'bool' in operation
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(657,6): warning C4805: '==': unsafe mix of type 'gen::TInt32' and type 'bool' in operation
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(673,95): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(673,71): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(673,133): warning C4305: 'argument': truncation from 'double' to 'const gen::TFloat32'
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(683,99): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(683,75): warning C4244: 'argument': conversion from 'gen::TInt32' to 'const gen::TFloat32', possible loss of data
+D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\TankAssignment.cpp(683,137): warning C4305: 'argument': truncation from 'double' to 'const gen::TFloat32'
 D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.h(252): warning C4715: 'gen::CTankEntity::GetStateToString': not all control paths return a value
-D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\Source\Scene\TankEntity.cpp(195): warning C4715: 'gen::RandomPosChecker': not all control paths return a value
   TankAssignment.vcxproj -> D:\Users\DKavanagh2\Desktop\AH\Games-Dev-2\GD2\TankAssignment.exe

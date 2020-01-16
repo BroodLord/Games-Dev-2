@@ -425,7 +425,6 @@ namespace gen
 									this->TurretWorldMatrix.DecomposeAffineEuler(NULL, &TurretRot, NULL);
 									CMatrix4x4 NewMatrix = Matrix(2) * Matrix();
 									Timer = 1.0f;
-									EntityManager.CreateTemplate("Projectile", "Shell Type 1", "Bullet.x");
 									EntityManager.CreateShell("Shell Type 1", GetName(), this->TurretWorldMatrix.Position(), TurretRot);
 									++this->ShootsFired;
 									Fired = true;
